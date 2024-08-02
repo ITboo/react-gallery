@@ -1,49 +1,37 @@
-import { useEffect, useState } from "react";
 import "./App.css";
 import Button from "./components/Button";
 import List from "./components/List";
+import { useQuery } from "@tanstack/react-query";
+
+async function fetchData() {
+  const response = await fetch("https://hp-api.herokuapp.com/api/characters");
+  return response.json();
+}
 
 function App() {
-  const [photos, setPhotos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const { data, isLoading, isError, isSuccess } = useQuery({
+    queryKey: ["character"],
+    queryFn: fetchData,
+  });
 
-  const fetchData = () => {
-    fetch("https://hp-api.herokuapp.com/api/characters")
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
-        setPhotos(data.splice(1, 20)); // в апи много отсутствующих фото
-        setLoading(false)
-      });
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return <h1>Loading...</h1>;
   }
 
-  if (error) {
+  if (isError) {
     return <h1>Something went wrong</h1>;
   }
 
-  if (!photos) {
+  if (!data) {
     return <h1>Nothing to show</h1>;
   }
-
 
   return (
     <>
       <header>
         <Button className="menu">Menu</Button>
       </header>
-      <main>
-        <List photos={photos} />
-      </main>
+      <main>{isSuccess && <List photos={data} />}</main>
     </>
   );
 }
